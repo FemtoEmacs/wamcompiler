@@ -72,8 +72,9 @@ repeat.
 repeat:-repeat.
 :-builtin_lock(repeat,0).
 
-\+(P):-call(P),!,fail.
-\+(_).
+%% Defined in wamcompiler to avoid bug in cut
+%%\+(P):-call(P),!,fail.
+%%\+(_).
 :-builtin_lock(\+,1).
 
 =(X,X).
