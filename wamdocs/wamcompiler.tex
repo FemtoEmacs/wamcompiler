@@ -1762,6 +1762,308 @@ Move = NIL
 yes.
 \end{verbatim}
 
+\chapter{Ninety-Nine Prolog Programs}
+Werner Hett says in his article Ninety-Nine Prolog Programs:
+\begin{quotation}
+The purpose of this problem collection is to give you the
+opportunity to practice your skills in logic programming.
+Your goal should be to find the most elegant solution of
+the given problems. Efficiency is important, but logical
+clarity is even more crucial. Some of the (easy) problems
+can be trivially solved using built-in predicates. However,
+in these cases, you learn more if you try to find your own
+solution.
+
+Every predicate that you write should begin with a comment
+that describes the predicate in a declarative statement.
+Do not describe procedurally, what the predicate does, but
+write down a logical statement which includes the arguments
+of the predicate. You should also indicate the intended data
+types of the arguments and the allowed flow patterns.
+
+The problems have different levels of difficulty. Those marked
+with a single asterisk (*) are easy. If you have successfully
+solved the preceeding problems you should be able to solve
+them within a few (say 15) minutes. Problems marked with two
+asterisks (**) are of intermediate difficulty. If you are a
+skilled Prolog programmer it shouldn't take you more than
+30-90 minutes to solve them. Problems marked with three
+asterisks (***) are more difficult. You may need more
+time (i.e. a few hours or more) to find a good solution. 
+\end{quotation}
+
+I did not followed Hett's advice to the letter. In roder
+to check for bugs in the compiler, I used cuts everywhere
+to prevent backtracking. It is easy to restore the logic
+purity of the programs: Just eliminate the cuts.
+
+\pagebreak
+\begin{verbatim}
+%% ?- consult('p99.pl').
+
+%% P01 (*): Find the last element of a list
+%% > ?-mylast(X, [1,2,3,4,5]).
+%% X = 5
+
+mylast(X, [X]) :- !.
+mylast(X, [_|L]) :- mylast(X, L).
+
+%% P02 (*): Find the last but one element of a list
+%% > ?-last_but_one(X, [1,2,3,4,5]).
+%% X = 4
+
+last_but_one(X, [X,_]) :- !.
+last_but_one(X, [_,Y|Ys]) :- last_but_one(X, [Y|Ys]).
+
+% P03 (*): Find the K'th element of a list.
+% The first element in the list is number 1.
+%% > ?-element_at(X, [1,2,three,4,5], 3).
+%% X = three
+element_at(X,[X|_],1) :- !.
+element_at(X,[_|L],K) :- K > 1,
+   K1 is K - 1, element_at(X,L,K1).
+
+% P04 (*): Find the number of elements of a list.
+%% > ?-length([1,2,3,4,5], L).
+%% L = 5
+
+length([],0) :- !.
+length([_|L],N) :- length(L,N1),
+                  N is N1 + 1.
+
+% P05 (*): Reverse a list.
+%% > ?-reverse([1,2,3,4],L).
+%% L = [4,3,2,1]
+
+reverse(L1,L2) :- my_rev(L1,L2,[]).
+
+my_rev([],L2,L2) :- !.
+my_rev([X|Xs],L2,Acc) :- my_rev(Xs,L2,[X|Acc]).
+
+% P06 (*): Find out whether a list is a palindrome
+%% > ?-is_palindrome([s,u,b,i,d,u,r,a,a,r,u,d,i,b,u,s]).
+
+%% Ignore spaces in Latin palindromes: Romans didn't use them:
+%  subi dura a rudibus -- endure rudeness from peasants
+%  roma tibi subito motibus ibit amor -- 
+%    in Rome quickly with its bustle you will find love
+  
+is_palindrome(L) :- reverse(L,L).
+
+
+% P07 (**): Flatten a nested list structure.
+%% > ?-flatten([3,4,[a,[b]], 5], L).
+%% L = [3,4,a,b,5]
+
+append([],L,L) :- !.
+append([H|T], L, [H|U]) :- append(T,L,U).
+
+flatten([],[]) :- !.
+flatten([X|Xs],Zs) :- !, flatten(X,Y),
+   flatten(Xs,Ys), append(Y,Ys,Zs).
+flatten(X, [X]).
+
+% P08 (**): Eliminate consecutive duplicates of list elements.
+%% > ?-compress([2,3,3,3,4,4,5], L).
+%% L = [2,3,4,5]
+compress([],[]) :- !.
+compress([X],[X]) :- !.
+compress([X,Y|Xs],Zs) :-  X==Y, !, compress([X|Xs],Zs).
+compress([X,Y|Ys],[X|Zs]) :-  compress([Y|Ys],Zs).
+
+% P09 (**):  Pack consecutive duplicates of list elements.
+%% > ?-pack([2,3,3,3,4,4,5], L).
+%% L = [[2],[3,3,3],[4,4],[5]]
+
+pack([],[]) :- !.
+pack([X|Xs],[Z|Zs]) :- transfer(X,Xs,Ys,Z), pack(Ys,Zs).
+
+transfer(X,[],[],[X]) :- !.
+transfer(Y,[X|Xs],Ys,[X|Zs]) :- X == Y, !, transfer(X,Xs,Ys,Zs).
+transfer(X,[Y|Ys],[Y|Ys],[X]).
+\end{verbatim}
+
+\begin{verbatim}
+% P10 (*):  Run-length encoding of a list
+%% > ?-encode([a,a,a,b,b,b,b,b,c,d], Ans).
+%% Ans = [[3,a],[5,b],[1,c],[1,d]]
+
+encode(L1,L2) :- pack(L1,L),
+            transform(L,L2).
+
+transform([],[]) :- !.
+transform([[X|Xs]|Ys],[[N,X]|Zs]) :- length([X|Xs],N),
+                             transform(Ys,Zs).
+
+% P11 (*):  Modified run-length encoding
+%% > ?-encode_modified([1,1,2,2,2,2,2,3,3,4], G).
+%% G = [[2,1],[5,2],[2,3],4]
+
+encode_modified(L1,L2) :- encode(L1,L),
+                      strip(L,L2).
+
+strip([],[]) :- !.
+strip([[Num,X]|Ys],[X|Zs]) :- Num == 1, !,
+                       strip(Ys,Zs).
+strip([[N,X]|Ys],[[N,X]|Zs]) :- N > 1,
+                           strip(Ys,Zs).
+
+
+% P12 (**): Decode a run-length compressed list.
+%% > ?-encode([a,a,a,b,b,b,b,b,c,d], Ans), decode(Ans, G).
+%% Ans = [[3,a],[5,b],[1,c],[1,d]]
+%%G = [a,a,a,b,b,b,b,b,c,d]
+
+notlist(X) :- atom(X), !.
+notlist(X) :- number(X).
+
+decode([],[]) :- !.
+decode([[Num,X]|Ys],[X|Zs]) :- Num == 1, !, decode(Ys,Zs).
+decode([[N,X]|Ys],[X|Zs]) :- N > 1, !,
+           N1 is N - 1,
+           decode([[N1,X]|Ys],Zs).
+decode([X|Ys],[X|Zs]) :- notlist(X),
+                         decode(Ys,Zs).
+\end{verbatim}
+
+\pagebreak
+\begin{verbatim}
+% P13 (**): Run-length encoding of a list (direct solution) 
+%% > ?-encode_direct([1,1,2,2,2,2,2,3,3,4], G).
+%% G = [[2,1],[5,2],[2,3],4]
+
+encode_direct([],[]) :- !.
+encode_direct([X|Xs],[Z|Zs]) :- count(X,Xs,Ys,1,Z),
+                     encode_direct(Ys,Zs).
+
+count(X,[],[],1,X) :- !.
+count(X,[],[],N,[N,X]) :- N > 1, !.
+count(X,[Y|Ys],[Y|Ys],1,X) :- X \= Y.
+count(Y,[X|Xs],Ys,K,T) :- X == Y, !,
+   K1 is K + 1, count(X,Xs,Ys,K1,T).
+count(X,[Y|Ys],[Y|Ys],N,[N,X]) :- N > 1.
+
+% P14 (*): Duplicate the elements of a list
+%% > ?-dupli([1,2,2,3,3,3,5], L).
+%% L = [1,1,2,2,2,2,3,3,3,3,3,3,5,5]
+
+dupli([],[]) :- !.
+dupli([X|Xs],[X,X|Ys]) :- dupli(Xs,Ys).
+
+% P15 (**): Duplicate the elements of a list agiven number of times
+%% > ?-dupli([1,2,2,3,3,3,5], 4,  L).
+%% L = [1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5]
+
+dupli(L1,N,L2) :- dupli(L1,N,L2,N).
+dupli([],_,[],_) :- !.
+dupli([_|Xs],N,Ys, K) :- K == 0, !, dupli(Xs,N,Ys,N).
+dupli([X|Xs],N,[X|Ys],K) :- K > 0, K1 is K - 1,
+                dupli([X|Xs],N,Ys,K1).
+
+% P16 (**):  Drop every N'th element from a list
+%% > ?-drop([1,2,3,4,5,6], 3, R).
+%% R = [1,2,4,5]
+
+drop(L1,N,L2) :- drop(L1,N,L2,N).
+drop([],_,[],_) :- !.
+drop([X|Xs],N,[X|Ys],K) :- K > 1, !,
+       K1 is K - 1, drop(Xs,N,Ys,K1).
+drop([_|Xs],N,Ys, K) :-  drop(Xs,N,Ys,N).
+
+% P17 (*): Split a list into two parts
+%% > ?-split([2,5,3,8,1], 3, X, Y).
+%% X = [2,5,3]
+%% Y = [8,1]
+
+split([X|Xs],N,[X|Ys],Zs) :- N > 0, !, N1 is N - 1,
+                 split(Xs,N1,Ys,Zs).
+split(L,0,[],L).
+\end{verbatim}
+
+\begin{verbatim}
+% P18 (**):  Extract a slice from a list
+%% > ?-slice([1,2,3,4,5,6,7], 2,4, R).
+%% R = [2,3,4]
+
+slice([X|_],1,1,[X]) :- !.
+slice([X|Xs],1,K,[X|Ys]) :- K > 1, !, 
+   K1 is K - 1, slice(Xs,1,K1,Ys).
+slice([_|Xs],I,K,Ys) :- I > 1, 
+   I1 is I - 1, K1 is K - 1, slice(Xs,I1,K1,Ys).
+
+% P19 (**): Rotate a list N places to the left 
+%% > ?-rotate([1,2,3,4,5,6,7], 2, R).
+%% R = [3,4,5,6,7,1,2]
+
+rotate(L1,N,L2) :- N >= 0, !, 
+   length(L1,NL1), N1 is N mod NL1, rotate_left(L1,N1,L2).
+rotate(L1,N,L2) :- 
+   length(L1,NL1), N1 is NL1 + (N mod NL1), rotate_left(L1,N1,L2).
+
+rotate_left(L1,N,L2) :- N > 0, !,
+    split(L1,N,S1,S2), append(S2,S1,L2).
+rotate_left(L,0,L).
+
+% P20 (*): Remove the K'th element from a list.
+%% > ?-remove_at(X, [1,2,3,4,5,6], 3, L).
+%% X = 3
+%% L = [1,2,4,5,6]
+
+remove_at(X,[Y|Xs],K,[Y|Ys]) :- K > 1, !, 
+   K1 is K - 1, remove_at(X,Xs,K1,Ys).
+remove_at(X,[X|Xs],1,Xs).
+
+
+% P21 (*): Insert an element at a given position into a list
+%% > ?-insert_at(a,[1,2,3,4,5], 3, L).
+%% L = [1,2,a,3,4,5]
+
+insert_at(X,L,K,R) :- remove_at(X,R,K,L).
+
+
+% P22 (*):  Create a list containing all integers within a given range.
+%% > ?-range(4,9,L).
+%% L = [4,5,6,7,8,9]
+
+range(I,K,[I]) :- I >= K, !.
+range(I,K,[I|L]) :- I < K, 
+    I1 is I + 1, range(I1,K,L).
+
+
+% P23 (**): Extract a given number of randomly
+% selected elements from a list.
+%% (load "rnd.lisp") the Lisp function
+%% that generates random numbers.
+%% Study file "rnd.lisp" to learn how to
+%% implement new primitives.
+%% > ?- rnd_select([1,2,3,4,5,6], 3, L).
+%% L = [6,2,4]
+
+rnd_select(_,K,[]) :- K < 1, !.
+rnd_select(Xs,N,[X|Zs]) :- N > 0,
+    length(Xs,L),
+    random(R, L), I is R + 1,
+    remove_at(X,Xs,I,Ys),
+    N1 is N - 1,
+    rnd_select(Ys,N1,Zs).
+
+
+% P24 (*): Lotto: Draw N different random numbers from  1..M
+%% > ?-lotto(6,49,L).
+%% L = [44,36,39,5,28,34]
+
+lotto(N,M,L) :- range(1,M,R), rnd_select(R,N,L).
+
+
+% P25 (*):  Generate a random permutation of the elements of a list
+%% > ?-rnd_permu([1,2,3,4,5], L).
+%% L = [2,4,3,1,5]
+
+rnd_permu(L1,L2) :- length(L1,N), rnd_select(L1,N,L2).
+
+
+\end{verbatim}
+
 \chapter{Shell}
 \index{Shell}
 Nia, a Greek young woman, has an
@@ -5082,84 +5384,4 @@ Available from \verb|http://www.scheme.com/tspl4/|
 \printindex
 
 \end{document}
-
-\frontmatter
-
-\chapter*{Preface}
-
-Femto is a tiny Emacs clone,
-originally derived from a minimalist
-editor called Atto. Although built
-upon the C Atto codebase, Femto can
-be customized using the femtolisp Scheme dialect.
-
-The fundamental paradigm of Emacs is that it
-rests on a small core, but can be
-extended and customized through
-the Lisp programming language.
-
-Istead of requiring from the programmer a compile,
-build, test and fix cycle ---
-Lisp offers a Read, Eval, Print Loop (REPL).
-\begin{enumerate}
-\item {\bf Read.} The REPL reads
-a symbolic expression 
-such as \verb|(+ 42 13 4)| from
-a text terminal. The symbolic expression -- sexpr --
-always has the form: $(\textrm{operation}\;a_1\;a_2\ldots a_n)$,
-where $a_1$, $a_2$\ldots $a_n$ are the arguments of
-the operation.
-\item {\bf Eval.} The compiler translates the symbolic
-expression to machine language, then executes the
-generated code and calculates the corresponding
-value.
-\item {\bf Print.} The value produced in step 2 is printed.
-\item {\bf Loop.} The REPL returns to step 1.
-\end{enumerate}
-
-Since Lisp is usually compiled, it is
-much faster than interpreted languages.
-However, to facilitate portability,
-femtolisp does not generate
-native code, but compiles symbolic expressions
-to a virtual machine language. As a consequence of
-this choice, femtolisp is not as fast as other
-Lisp dialects, such as sbcl and Racket. Notwithstanding,
-it is about four times faster than Python
-and forty times faster than Tiny Scheme.
-
-The REPL approach enables fast prototyping
-of extensions as each idea can be tested
-individually on the command line inside
-the editor with an immediate result check.
-
-For historical reasons, the reference GNU
-Emacs implementation uses a specialised version of
-lisp known as Emacs Lisp.  However, the Emacs Lisp
-dialect is not standard lisp, being used
-only by the GNU Emacs editor and its
-derivatives.
-
-Femtolisp was chosen
-as the extension language
-for FemtoEmacs for the following reasons:
-\begin{enumerate}
-\item Femtolisp is open source.
-\item Femtolisp is small and written in C.
-\item After loading the \verb|r5rs.scm| library
-provided in the femtoemacs distribution,
-the user can bridge the syntactic gap
-between femtolisp and Scheme.
-In the majority of situations, the \verb|r5rs.scm|
-library is compatible
-with the standard Scheme dialect. This means that
-one can use classical Scheme tutorials to learn
-how to configure and customize femtoemacs.
-The Structure and Interpretation of Computer Programs
-is the most popular of these tutorials.
-Of course, you can use the content of the
-present text to the same effect.
-\item Femtolisp is fast.
-\end{enumerate}    
-
 
