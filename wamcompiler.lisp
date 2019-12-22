@@ -21,6 +21,8 @@
 (defvar *dispatching-code-table* (make-hash-table :test #'equal))
 (defvar *builtin-predicate-table* (make-hash-table :test #'equal))
 
+
+
 (define-condition prolog-escape-repl (simple-condition) ())
 
 (define-condition prolog-query-failed (simple-condition) ())
@@ -538,28 +540,21 @@
   (dolist (inst code)
     (case (car inst)
       (put-variable-temporary
-       (format t "~10Tput-variable X~A,A~A~%" 
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-variable X~A,A~A~%" (cadr inst) (caddr inst)))
       (put-variable-permanent
-       (format t "~10Tput-variable Y~A,A~A~%" 
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-variable Y~A,A~A~%" (cadr inst) (caddr inst)))
       (put-value-temporary
-       (format t "~10Tput-value X~A,A~A~%" 
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-value X~A,A~A~%" (cadr inst) (caddr inst)))
       (put-value-permanent
-       (format t "~10Tput-value Y~A,A~A~%" 
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-value Y~A,A~A~%" (cadr inst) (caddr inst)))
       (put-unsafe-value
-       (format t "~10Tput-unsafe-value Y~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-unsafe-value Y~A,A~A~%" (cadr inst) (caddr inst)))
       (put-structure
-       (format t "~10Tput-structure ~A/~A,A~A~%"
-	       (caadr inst) (cdadr inst) (caddr inst)))
+       (format t "~10Tput-structure ~A/~A,A~A~%" (caadr inst) (cdadr inst) (caddr inst)))
       (put-list
        (format t "~10Tput-list A~A~%" (cadr inst)))
       (put-constant
-       (format t "~10Tput-constant ~A,A~A~%" 
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tput-constant ~A,A~A~%" (cadr inst) (caddr inst)))
       (set-variable-temporary
        (format t "~10Tset-variable X~A~%" (cadr inst)))
       (set-variable-permanent
@@ -577,25 +572,19 @@
       (set-void
        (format t "~10Tset-void ~A~%" (cadr inst)))
       (get-variable-temporary
-       (format t "~10Tget-variable X~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tget-variable X~A,A~A~%" (cadr inst) (caddr inst)))
       (get-variable-permanent
-       (format t "~10Tget-variable Y~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tget-variable Y~A,A~A~%" (cadr inst) (caddr inst)))
       (get-value-temporary
-       (format t "~10Tget-value X~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tget-value X~A,A~A~%" (cadr inst) (caddr inst)))
       (get-value-permanent
-       (format t "~10Tget-value Y~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tget-value Y~A,A~A~%" (cadr inst) (caddr inst)))
       (get-structure
-       (format t "~10Tget-structure ~A/~A,A~A~%"
-	       (caadr inst) (cdadr inst) (caddr inst)))
+       (format t "~10Tget-structure ~A/~A,A~A~%" (caadr inst) (cdadr inst) (caddr inst)))
       (get-list
        (format t "~10Tget-list A~A~%" (cadr inst)))
       (get-constant
-       (format t "~10Tget-constant ~A,A~A~%"
-	       (cadr inst) (caddr inst)))
+       (format t "~10Tget-constant ~A,A~A~%" (cadr inst) (caddr inst)))
       (unify-variable-temporary
        (format t "~10Tunify-variable X~A~%" (cadr inst)))
       (unify-variable-permanent
@@ -619,11 +608,9 @@
       (allocate-for-query
        (format t "~10Tallocate-for-query ~A~%" (cadr inst)))
       (call
-       (format t "~10Tcall ~A/~A,~A~%" (caadr inst)
-	       (cdadr inst) (caddr inst)))
+       (format t "~10Tcall ~A/~A,~A~%" (caadr inst) (cdadr inst) (caddr inst)))
       (execute
-       (format t "~10Texecute ~A/~A~%"
-	       (caadr inst) (cdadr inst)))
+       (format t "~10Texecute ~A/~A~%" (caadr inst) (cdadr inst)))
       (proceed
        (format t "~10Tproceed~%"))
       (try-me-else
@@ -640,8 +627,7 @@
        (format t "~10Ttrust ~A~%" (cadr inst)))
       (switch-on-term
        (format t "~10Tswitch-on-term ~A,~A,~A,~A~%"
-	       (cadr inst) (caddr inst) (cadddr inst)
-	       (car (cddddr inst))))
+	       (cadr inst) (caddr inst) (cadddr inst) (car (cddddr inst))))
       (switch-on-constant
        (format t "~10Tswitch-on-constant ")
        (print-hashtable (cadr inst)) (princ #\Newline))
@@ -1127,8 +1113,7 @@
 	      (let ((newcode (set-unsafe-and-local! newcode)))
 		(print-wamcode newcode)
 		(format t "<--reallocate-registers-->~%")
-		(let ((newcode (reallocate-registers!
-				 newcode A-start arity-list)))
+		(let ((newcode (reallocate-registers! newcode A-start arity-list)))
 		  (print-wamcode newcode)
 		  (format t "<--remove-unnecessary-pair-->~%")
 		  (let ((newcode (remove-unnecessary-pair newcode)))
@@ -1141,12 +1126,17 @@
        (cons ,element ,list)
        ,list))
 
+
+(defun add-true(s)
+  (if (and (consp s) (equal (car s) '(|!|)) )
+     (cons '(|true|) s) s))
+
 (defun divide-head-body (clause)
   (destructuring-bind
 	(head body clause-type) (cond
 				  ((and (eq (car clause) '|:-|) (= (arity clause) 2))
 				   (list
-				    (cadr clause) (flatten-comma (caddr clause)) 'rule))
+				    (cadr clause) (add-true (flatten-comma (caddr clause))) 'rule))
 				  ((and (eq (car clause) '|:-|) (= (arity clause) 1))
 				   (list nil (flatten-comma (cadr clause)) 'call))
 				  ((and (eq (car clause) '|?-|) (= (arity clause) 1))
@@ -1411,11 +1401,13 @@
 			     (append
 			      (if  (= body-num 0)
 				  (list (list 'neck-cut))
-				  `((cut ,(cddr (assoc '|!| assign-table)))))
+				  `((cut ,(cddr (assoc '|!|
+						   assign-table)))))
 			      deallocate-part))
 			    ((= -1 remain)
 			     (append deallocate-part
-				     `((execute ,(cons (car b) (arity b))))))
+				     `((execute ,(cons (car b)
+						       (arity b))))))
 			    (t
 			     `((call ,(cons (car b) (arity b)) ,remain)))))))
 		     body remain-list)
@@ -1880,8 +1872,7 @@ heap: -2,-4,-6,...
       (adjust-array *stack-area* (* 2 real-addr)))
     (setf (aref *stack-area* real-addr) new-val)))
 
-(defconstant bottom-of-stack -3)
-;; -1 is treated as an initial value of E (B>E in initial state)
+(defconstant bottom-of-stack -3) ;; -1 is treated as an initial value of E (B>E in initial state)
 (defconstant bottom-of-heap -2)
 (defconstant initial-value-of-E -1)
 
@@ -1941,8 +1932,7 @@ heap: -2,-4,-6,...
 (defun print-memory ()
   (loop for i from 0 to (1- (length *heap-area*)) do
        (if (eq 0  (heap (* -2 (1+ i)))) (return))
-       (format t "H ~A : ~A~%" (* -2 (1+ i))
-	       (heap (* -2 (1+ i)))))
+       (format t "H ~A : ~A~%" (* -2 (1+ i)) (heap (* -2 (1+ i)))))
   (format t "--------------~%")
   (loop for i from 0 to (1- (length *stack-area*)) do
        (if (and (> i 5)
@@ -1976,7 +1966,7 @@ heap: -2,-4,-6,...
 	a)))
 
 (defun backtrack ()
-  (if (eq *B* bottom-of-stack)
+  (if (or (null *B*) (eq *B* bottom-of-stack))
       (signal (make-condition 'prolog-query-failed))
       (progn (setq *fail* nil)
 	     (setf *B0* (stack (addr+ *B* (stack *B*) 7)))
@@ -1991,7 +1981,7 @@ heap: -2,-4,-6,...
 	       (set-to-trail a2)))))
 
 (defun set-to-trail (a)
-  (when (or (addr< a *HB*) (and (addr< *H* a) (addr< a *B*)))
+  (when (or (addr< a *HB*) (and (addr< *H* a) (and *B* (addr< a *B*))))
     (setf (trail *TR*) a)
     (incf *TR*)))
 
@@ -2117,6 +2107,7 @@ heap: -2,-4,-6,...
     (setq *fail* nil)
     (loop
        (let ((inst (car *P*)))
+	 ;;(format t "next: ~A  *HB*=~A *B*=~A fail:~A~%" inst *HB* *B* *fail*)
 	 (if (null inst)
 	     (return)
 	     (if (eq 'fail inst)
@@ -2127,7 +2118,7 @@ heap: -2,-4,-6,...
 			(signal (make-condition
 				 'prolog-found-solution
 				 :vars (make-solution-result (second inst))
-				 :can-backtrack? (/= *B* bottom-of-stack)))
+				 :can-backtrack? (and *B* (/= *B* bottom-of-stack))))
 		      (next-solution ()
 			(backtrack))))
 		   (put-variable-temporary (let ((x (cadr inst)) (a (caddr inst)))
@@ -2211,7 +2202,6 @@ heap: -2,-4,-6,...
 			    (bind addr *H*)))
 		      (setf *H* (addr+ *H* 1))
 		      (setq *P* (cdr *P*))))
-		   (setcons (setcons))
 		   (set-constant (let ((c (cadr inst)))
 				   (setf (heap *H*) (cons 'con c))
 				   (setf *H* (addr+ *H* 1))
@@ -2537,18 +2527,12 @@ heap: -2,-4,-6,...
 			       (tidy-trail))
 			     (setq *P* (cdr *P*)))
 		   (get-level (let ((y (cadr inst)))
-				(setf (stack (addr+ *E* 2 y)) *B0*))
+				(setf (stack (addr+ *E* 1 y)) *B0*))
 			      (setq *P* (cdr *P*)))
-		   (cut (let* ( (y (cadr inst))
-			        (cut-instruction
-				  (when (and (numberp *E*) (numberp *B*)) 
-				    (stack (addr+ *E* 2 y)) )))
-			(unless (numberp cut-instruction)
-			   (error (make-condition 'prolog-builtin-predicate-error
-			             :predicate (cons '|!| 0)
-				     :cause "Avoid ! after 'V is expr' or 'V= F'")))
-			  (when (addr<  cut-instruction *B*)
-			    (setf *B* cut-instruction )
+		   (cut (let ( (y (cadr inst)) )
+			  (when (and *B* *E*
+				     (addr< (stack (addr+ *E* 1 y)) *B*))
+			    (setf *B* (stack (addr+ *E* 1 y)))
 			    (tidy-trail))
 			  (setq *P* (cdr *P*))))
 		   (label
@@ -2562,8 +2546,7 @@ heap: -2,-4,-6,...
 			(setq *P* (cdr *P*))))
 		   (otherwise (error
 			       (make-condition
-				'prolog-bad-instruction-error 
-				:inst (car inst)))))))))))
+				'prolog-bad-instruction-error :inst (car inst)))))))))))
 
 
 
@@ -2598,19 +2581,15 @@ heap: -2,-4,-6,...
 	  ((eq *structure* (car compound))
 	   (let* ((arg-values
 		   (mapcar (lambda (arg)
-			     (wam-place-compound-on-heap arg))
-			   (cddr compound)))
+			     (wam-place-compound-on-heap arg)) (cddr compound)))
 		  (placed-addr *H*))
-	     (push-heap (cons (second compound)
-			      (length (cddr compound))))
+	     (push-heap (cons (second compound) (length (cddr compound))))
 	     (mapc #'push-heap arg-values)
 	     (push-heap (cons 'struct placed-addr))
 	     (cons 'ref (addr+ *H* -1))))
 	  (t
-	   (let* ((arg-value1 (wam-place-compound-on-heap
-				(car compound)))
-		  (arg-value2 (wam-place-compound-on-heap
-				(cdr compound)))
+	   (let* ((arg-value1 (wam-place-compound-on-heap (car compound)))
+		  (arg-value2 (wam-place-compound-on-heap (cdr compound)))
 		  (placed-addr *H*))
 	     (push-heap arg-value1)
 	     (push-heap arg-value2)
@@ -2668,16 +2647,13 @@ heap: -2,-4,-6,...
   (eq (wamvalue-tag wv) 'ref))
 
 (defun wamvalue-number-p (wv)
-  (and (wamvalue-constant-p wv) 
-       (numberp (wamvalue-content wv))))
+  (and (wamvalue-constant-p wv) (numberp (wamvalue-content wv))))
 
 (defun wamvalue-atom-p (wv)
-  (and (wamvalue-constant-p wv) 
-       (symbolp (wamvalue-content wv))))
+  (and (wamvalue-constant-p wv) (symbolp (wamvalue-content wv))))
 
 (defun wamvalue-predicate-p (wv)
-  (or (wamvalue-atom-p wv) 
-      (wamvalue-struct-p wv)))
+  (or (wamvalue-atom-p wv) (wamvalue-struct-p wv)))
 
 #|
 (defmacro prolog-success ()
@@ -2689,8 +2665,7 @@ heap: -2,-4,-6,...
 
 (defmacro prolog-error (functor arity cause)
   `(error (make-condition 'prolog-builtin-predicate-error
-			  :predicate ',(cons (intern functor) arity) 
-			  :cause ,cause)))
+			  :predicate ',(cons (intern functor) arity) :cause ,cause)))
 
 (defmacro prolog-assert (functor arity cause expr)
   `(unless ,expr
@@ -2699,26 +2674,19 @@ heap: -2,-4,-6,...
 (defmacro define-prolog-builtin (name arg-list &body body)
   (let ((flag (gensym)) (exit (gensym)))
     `(progn
-       (setf (gethash ',(cons (intern name) 
-			      (length arg-list)) 
-		      *predicate-type-table*)
+       (setf (gethash ',(cons (intern name) (length arg-list)) *predicate-type-table*)
 	     'builtin)
-       (setf (gethash ',(cons (intern name) 
-			      (length arg-list)) 
-		      *builtin-predicate-table*)
+       (setf (gethash ',(cons (intern name) (length arg-list)) *builtin-predicate-table*)
 	     (lambda ,arg-list
 	       (declare (ignorable ,@arg-list))
 	       (block ,exit
 		 (let ((,flag nil))
 		   (labels ((prolog-fail ()
-			      (setq ,flag 'fail) 
-			      (backtrack) (return-from ,exit))
+			      (setq ,flag 'fail) (backtrack) (return-from ,exit))
 			    (prolog-success ()
-			      (setq ,flag 'success) 
-			      (setf *P* *CP*) (return-from ,exit))
+			      (setq ,flag 'success) (setf *P* *CP*) (return-from ,exit))
 			    (prolog-backtrack-or-continue ()
-			      (if *fail* (prolog-fail) 
-				(prolog-success)))
+			      (if *fail* (prolog-fail) (prolog-success)))
 			    (prolog-suppress-control ()
 			      (setq ,flag 't)))
 		     (unwind-protect
@@ -2734,26 +2702,22 @@ heap: -2,-4,-6,...
 
 (define-prolog-builtin "atomic" (x)
   (if (and (wamvalue-constant-p x)
-	   (or (symbolp (wamvalue-content x)) 
-	       (numberp (wamvalue-content x))))
+	   (or (symbolp (wamvalue-content x)) (numberp (wamvalue-content x))))
       (prolog-success)
       (prolog-fail)))
 
 (define-prolog-builtin "number" (x)
-  (if (and (wamvalue-constant-p x) 
-	   (numberp (wamvalue-content x)))
+  (if (and (wamvalue-constant-p x) (numberp (wamvalue-content x)))
       (prolog-success)
       (prolog-fail)))
 
 (define-prolog-builtin "integer" (x)
-  (if (and (wamvalue-constant-p x) 
-	   (integerp (wamvalue-content x)))
+  (if (and (wamvalue-constant-p x) (integerp (wamvalue-content x)))
       (prolog-success)
       (prolog-fail)))
 
 (define-prolog-builtin "float" (x)
-  (if (and (wamvalue-constant-p x) 
-	   (floatp (wamvalue-content x)))
+  (if (and (wamvalue-constant-p x) (floatp (wamvalue-content x)))
       (prolog-success)
       (prolog-fail)))
 
@@ -2780,8 +2744,7 @@ heap: -2,-4,-6,...
 
 (defun prolog-calc-expr (expr)
   (cond ((numberp expr) expr)
-	((and (prolog-structure-p expr) 
-	      (= 1 (prolog-structure-arity expr)))
+	((and (prolog-structure-p expr) (= 1 (prolog-structure-arity expr)))
 	 (case (second expr)
 	   (|+| (prolog-calc-expr (third expr)))
 	   (|-| (- (prolog-calc-expr (third expr))))
@@ -2797,15 +2760,11 @@ heap: -2,-4,-6,...
 	   (|round| (round (prolog-calc-expr (third expr))))
 	   (|ceiling| (ceiling (prolog-calc-expr (third expr))))
 	   (|floor| (floor (prolog-calc-expr (third expr))))))
-	((and (prolog-structure-p expr) 
-	      (= 2 (prolog-structure-arity expr)))
+	((and (prolog-structure-p expr) (= 2 (prolog-structure-arity expr)))
 	 (case (second expr)
-	   (|+| (+ (prolog-calc-expr (third expr)) 
-		   (prolog-calc-expr (fourth expr))))
-	   (|-| (- (prolog-calc-expr (third expr)) 
-		   (prolog-calc-expr (fourth  expr))))
-	   (|*| (* (prolog-calc-expr (third expr)) 
-		   (prolog-calc-expr (fourth expr))))
+	   (|+| (+ (prolog-calc-expr (third expr)) (prolog-calc-expr (fourth expr))))
+	   (|-| (- (prolog-calc-expr (third expr)) (prolog-calc-expr (fourth  expr))))
+	   (|*| (* (prolog-calc-expr (third expr)) (prolog-calc-expr (fourth expr))))
 	   (|/| (float (/ (prolog-calc-expr (third expr))
 			  (prolog-calc-expr (fourth expr)))))
 	   (|//| (truncate (prolog-calc-expr (third expr))
@@ -2825,28 +2784,22 @@ heap: -2,-4,-6,...
      (prolog-backtrack-or-continue))
 
 (define-prolog-builtin "plus" (var x y)
-   (unify-ao 1 (+ (to-lisp-object x) 
-		  (to-lisp-object y))))
+   (unify-ao 1 (+ (to-lisp-object x) (to-lisp-object y))))
 
 (define-prolog-builtin "minus" (var x y)
-   (unify-ao 1 (- (to-lisp-object x) 
-		  (to-lisp-object y)) ))
+   (unify-ao 1 (- (to-lisp-object x) (to-lisp-object y)) ))
 
 (define-prolog-builtin "is" (var expr)
   (prolog-assert "is" 2 "instantiation error"
-		 (not (prolog-contain-unbound-p 
-			(to-lisp-object expr))))
-  (let ((eval-result (prolog-calc-expr 
-		       (to-lisp-object expr))))
+		 (not (prolog-contain-unbound-p (to-lisp-object expr))))
+  (let ((eval-result (prolog-calc-expr (to-lisp-object expr))))
     (unify-ao 1 eval-result)
     (prolog-backtrack-or-continue)))
 
 (define-prolog-builtin ">" (a b)
   (prolog-assert ">" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (> result-a result-b)
@@ -2861,10 +2814,8 @@ heap: -2,-4,-6,...
 (define-prolog-builtin "<" (a b)
 
   (prolog-assert "<" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (< result-a result-b)
@@ -2873,10 +2824,8 @@ heap: -2,-4,-6,...
 
 (define-prolog-builtin ">=" (a b)
   (prolog-assert ">=" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (>= result-a result-b)
@@ -2885,10 +2834,8 @@ heap: -2,-4,-6,...
 
 (define-prolog-builtin "=<" (a b)
   (prolog-assert "=<" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (<= result-a result-b)
@@ -2897,10 +2844,8 @@ heap: -2,-4,-6,...
 
 (define-prolog-builtin "=:=" (a b)
   (prolog-assert "=:=" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (= result-a result-b)
@@ -2909,10 +2854,8 @@ heap: -2,-4,-6,...
 
 (define-prolog-builtin "=\\=" (a b)
   (prolog-assert "=\\=" 2 "instantiation error"
-		 (not (or (prolog-contain-unbound-p 
-			    (to-lisp-object a))
-			  (prolog-contain-unbound-p 
-			    (to-lisp-object b)))))
+		 (not (or (prolog-contain-unbound-p (to-lisp-object a))
+			  (prolog-contain-unbound-p (to-lisp-object b)))))
   (let ((result-a (prolog-calc-expr (to-lisp-object a)))
 	(result-b (prolog-calc-expr (to-lisp-object b))))
     (if (/= result-a result-b)
@@ -2933,6 +2876,10 @@ heap: -2,-4,-6,...
 (define-prolog-builtin "fail" ()
   (prolog-fail))
 
+(define-prolog-builtin "true" ()
+  (let  ((wam-code '((proceed))))
+    (setf *P* wam-code)))
+
 (define-prolog-builtin "halt" ()
   (signal (make-condition 'prolog-escape-repl)))
 
@@ -2947,18 +2894,12 @@ heap: -2,-4,-6,...
   (prolog-assert "=.." 2 "instantiation error"
 		 (not (and (wamvalue-unbound-p struct)
 			   (wamvalue-unbound-p list))))
-  (cond ((and (wamvalue-unbound-p struct) 
-	      (wamvalue-list-p list))
-	 (unify-ao 1 (univ-list->struct 
-		       (to-lisp-object list))))
-	((and (wamvalue-unbound-p list) 
-	      (wamvalue-predicate-p struct))
-	 (unify-ao 2 (univ-struct->list 
-		       (to-lisp-object struct))))
-	((and (wamvalue-list-p list) 
-	      (wamvalue-predicate-p struct))
-	 (unify-ao 1 (univ-list->struct 
-		       (to-lisp-object list))))
+  (cond ((and (wamvalue-unbound-p struct) (wamvalue-list-p list))
+	 (unify-ao 1 (univ-list->struct (to-lisp-object list))))
+	((and (wamvalue-unbound-p list) (wamvalue-predicate-p struct))
+	 (unify-ao 2 (univ-struct->list (to-lisp-object struct))))
+	((and (wamvalue-list-p list) (wamvalue-predicate-p struct))
+	 (unify-ao 1 (univ-list->struct (to-lisp-object list))))
 	(t (prolog-error "=.." 2 "type error")))
   (prolog-backtrack-or-continue))
 
@@ -2966,13 +2907,12 @@ heap: -2,-4,-6,...
   (let ((arg-counter 0))
     (dolist (item (cddr pred-obj))
       (incf arg-counter)
-      (let ((wam-item 
-	      (cond ((null item) (cons 'con '[]))
-		( (atom item) (cons 'con item))
-		( (eq (car item) *unbound-variable*)
-		  (cons 'ref (cdr item)))
-		(t
-		   (wam-place-compound-on-heap item)))))
+      (let ((wam-item (cond ((null item) (cons 'con '[]))
+			    ((atom item) (cons 'con item))
+			    ((eq (car item) *unbound-variable*)
+			     (cons 'ref (cdr item)))
+			    (t
+			     (wam-place-compound-on-heap item)))))
 	(setf (register arg-counter) wam-item)))))
 
 (define-prolog-builtin "call" (pred)
@@ -2982,8 +2922,7 @@ heap: -2,-4,-6,...
   (let* ((obj (if (symbolp (to-lisp-object pred))
 		  (list *structure* (to-lisp-object pred))
 		  (to-lisp-object pred)))
-	 (wam-code `((execute ,(cons (second obj) 
-				     (length (cddr obj)))))))
+	 (wam-code `((execute ,(cons (second obj) (length (cddr obj)))))))
     (prolog-put-arguments obj)
     (setf *P* wam-code)))
 
@@ -2996,6 +2935,10 @@ heap: -2,-4,-6,...
 	   :initarg :result)
    (predicate :accessor predicate
 	      :initarg :predicate)))
+
+(defgeneric collect (collector))
+(defgeneric prepare (collector))
+(defgeneric put-result (collector))
 
 (defmethod collect ((c collector))
   (push (to-lisp-object (template c)) (items c))
@@ -3015,27 +2958,22 @@ heap: -2,-4,-6,...
   (prolog-suppress-control)
   (let* ((obj (to-lisp-object pred))
 	 (collector (make-instance 'collector
-			:template template
-			:predicate (to-lisp-object pred)
-			:result (to-lisp-object result)))
+				   :template template
+				   :predicate (to-lisp-object pred)
+				   :result (to-lisp-object result)))
 	 (wam-code `((try-me-else nil nil)
 		     (allocate)
-		     (function-call ,(cons #'prepare 1) 
-				    ,collector)
-		     (call ,(cons (second obj)
-				  (length (cddr obj))) 0)
-		     (function-call ,(cons #'collect 1) 
-				    ,collector 0)
+		     (function-call ,(cons #'prepare 1) ,collector)
+		     (call ,(cons (second obj) (length (cddr obj))) 0)
+		     (function-call ,(cons #'collect 1) ,collector 0)
 		     (deallocate)
 		     (execute ,(cons 'fail 0))
 		     (trust-me)
-		     (function-call ,(cons #'put-result 1) 
-				    ,collector)
+		     (function-call ,(cons #'put-result 1) ,collector)
 		     (backtrack-if-fail)
 		     (proceed))))
     (setf (caddar wam-code) (nthcdr 7 wam-code))
     (setf *P* wam-code)))
-
 
 (define-prolog-builtin "consult" (file)
   (prolog-assert "consult" 1 "instantiation error"
@@ -3043,8 +2981,7 @@ heap: -2,-4,-6,...
   (prolog-assert "consult" 1 "type error"
 		 (wamvalue-atom-p file))
   (let ((filename (symbol-name (to-lisp-object file))))
-    (with-open-file (s filename :direction :input 
-		       :if-does-not-exist :error)
+    (with-open-file (s filename :direction :input :if-does-not-exist :error)
       (repl :silent t :stream s))))
 
 (define-prolog-builtin "builtin_lock" (functor arity)
@@ -3056,8 +2993,7 @@ heap: -2,-4,-6,...
 		 (and
 		  (wamvalue-atom-p functor)
 		  (wamvalue-number-p arity)))
-  (setf (gethash (cons (to-lisp-object functor)
-		       (to-lisp-object  arity))
+  (setf (gethash (cons (to-lisp-object functor) (to-lisp-object  arity))
 		 *predicate-type-table*) 'builtin))
 
 (defun prolog-eval (str)
@@ -3079,47 +3015,12 @@ heap: -2,-4,-6,...
 	(assoc (to-lisp-object assoc))
 	(atom (to-lisp-object atom)))
     (cond ((or (not (<= 0 priority 1200))
-	       (not (member assoc '(|fx| |fy| |xf|
-					 |yf| |xfx|
-					 |yfx| |xfy|))))
+	       (not (member assoc '(|fx| |fy| |xf| |yf| |xfx| |yfx| |xfy|))))
 	   (prolog-error "op" 3 "domain error"))
 	  (t
-	   (setf (gethash (cons '|current_op| 3) 
-			  *predicate-type-table*) 'user-defined)
-	   (prolog-eval (format nil "current_op(~A,~A,~A)." 
-				priority assoc atom))
-	   (setf (gethash (cons '|current_op| 3) 
-			  *predicate-type-table*) 'builtin)
+	   (setf (gethash (cons '|current_op| 3) *predicate-type-table*) 'user-defined)
+	   (prolog-eval (format nil "current_op(~A,~A,~A)." priority assoc atom))
+	   (setf (gethash (cons '|current_op| 3) *predicate-type-table*) 'builtin)
 	   (register-operator (list atom priority
-				(intern (string-upcase 
-					  (symbol-name assoc)))))))))
-
-
-(define-prolog-builtin "\\+" (pred)
-  (prolog-assert "\\+" 1 "instantiation error"
-		 (not (wamvalue-unbound-p pred)))
-  (prolog-suppress-control)
-  (let* ((obj (to-lisp-object pred))
-	 (collector (make-instance 'collector
-			:template '(CON . 1)
-			:predicate (to-lisp-object pred)
-			:result nil))
-	 (wam-code `((try-me-else nil nil)
-		     (allocate)
-		     (function-call ,(cons #'prepare 1)
-				    ,collector)
-		     (call ,(cons (second obj) 
-				  (length (cddr obj))) 0)
-		     (function-call ,(cons #'collect 1) 
-				    ,collector 0)
-		     (deallocate)
-		     (execute ,(cons 'fail 0))
-		     (trust-me)
-		     (function-call ,(cons #'put-result 1) 
-				    ,collector)
-		     (backtrack-if-fail)
-		     (proceed)  )))
-    (setf (caddar wam-code) (nthcdr 7 wam-code))
-    (setf *P* wam-code)))
-
+				    (intern (string-upcase (symbol-name assoc)))))))))
 
