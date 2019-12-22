@@ -2784,10 +2784,12 @@ heap: -2,-4,-6,...
      (prolog-backtrack-or-continue))
 
 (define-prolog-builtin "plus" (var x y)
-   (unify-ao 1 (+ (to-lisp-object x) (to-lisp-object y))))
+   (unify-ao 1 (+ (to-lisp-object x) (to-lisp-object y)))
+   (prolog-backtrack-or-continue))
 
 (define-prolog-builtin "minus" (var x y)
-   (unify-ao 1 (- (to-lisp-object x) (to-lisp-object y)) ))
+   (unify-ao 1 (- (to-lisp-object x) (to-lisp-object y)) )
+   (prolog-backtrack-or-continue))
 
 (define-prolog-builtin "is" (var expr)
   (prolog-assert "is" 2 "instantiation error"
