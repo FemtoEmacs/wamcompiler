@@ -1742,100 +1742,73 @@
 	 (finish-output *query-io*)
 	 (let ((find-all-solution nil))
 	   (handler-bind
-	       ((end-of-file 
-		  (lambda (c)
-			(declare (ignore c))
-			(setq exit-flag t)
-			(return-from eval-once)))
-		(prolog-escape-repl 
-		  (lambda (c)
-			(declare (ignore c))
-			(setq exit-flag t)
-			(return-from eval-once)))
-		(prolog-builtin-predicate-error 
-		  (lambda (c)
-			(princ c *query-io*)
-			(format *query-io* "~%")
-			(clear-input *standard-input*)
-			(return-from eval-once)))
-		(prolog-query-failed 
-		  (lambda (c)
-			(declare (ignore c))
-			(format *query-io* "~%no.~%")
-			(return-from eval-once)))
-		(prolog-found-solution 
-		  (lambda (c)
-			(show-solution (vars c))
-			(if (or (null (vars c))
-				(not (can-backtrack? c)))
-			  (progn (format *query-io* "~%yes.~%")
-				(return-from eval-once))
-			(if find-all-solution
-			   (progn (format *query-io* "~%")
-				(invoke-restart 'next-solution))
-				(case (next-solution-prompt)
-				   (no (invoke-restart 
-					 'next-solution))
-		                   (all (setq find-all-solution t)
-					(invoke-restart 
-					  'next-solution))
-				   (yes (format *query-io* 
-						"~%yes.~%")
-					(return-from 
-					  eval-once)))))))
-		(prolog-syntax-error 
-		  (lambda (c)
-			(princ c *query-io*) 
-			(format *query-io* "~%")
-			(clear-input *standard-input*)
-			(return-from eval-once)))
-		(prolog-compile-error 
-		  (lambda (c)
-			(princ c *query-io*) 
-			(format *query-io* "~%")
-			(clear-input *standard-input*)
-			(return-from eval-once))))
+	       ((end-of-file (lambda (c)
+			       (declare (ignore c))
+			       (setq exit-flag t)
+			       (return-from eval-once)))
+		(prolog-escape-repl (lambda (c)
+				      (declare (ignore c))
+				      (setq exit-flag t)
+				      (return-from eval-once)))
+		(prolog-builtin-predicate-error (lambda (c)
+						  (princ c *query-io*)
+						  (format *query-io* "~%")
+						  (clear-input *standard-input*)
+						  (return-from eval-once)))
+		(prolog-query-failed (lambda (c)
+				       (declare (ignore c))
+				       (format *query-io* "~%no.~%")
+				       (return-from eval-once)))
+		(prolog-found-solution (lambda (c)
+					 (show-solution (vars c))
+					 (if (or (null (vars c))
+						 (not (can-backtrack? c)))
+					     (progn (format *query-io* "~%yes.~%")
+						    (return-from eval-once))
+					     (if find-all-solution
+						 (progn (format *query-io* "~%")
+							(invoke-restart 'next-solution))
+						 (case (next-solution-prompt)
+						   (no (invoke-restart 'next-solution))
+						   (all (setq find-all-solution t)
+							(invoke-restart 'next-solution))
+						   (yes (format *query-io* "~%yes.~%")
+							(return-from eval-once)))))))
+		(prolog-syntax-error (lambda (c)
+				       (princ c *query-io*) (format *query-io* "~%")
+				       (clear-input *standard-input*)
+				       (return-from eval-once)))
+		(prolog-compile-error (lambda (c)
+					(princ c *query-io*) (format *query-io* "~%")
+					(clear-input *standard-input*)
+					(return-from eval-once))))
 	     (let ((clause (parse *standard-input*)))
-	      (multiple-value-bind 
-	       (head body clause-type) 
-		(divide-head-body clause)
+	       (multiple-value-bind (head body clause-type) (divide-head-body clause)
 		 (case clause-type
-		  ((fact rule)
-		   (let ((wamcode 
-			   (compile-and-optimize 
-			    clause head body)))
-		     (let ((key (cons (car head) 
-				       (arity head))))
-		      (if (eq (gethash key 
-					 *predicate-type-table*) 
-				'builtin)
-		       (format *query-io*
-			"Builtin pred ~A/~A cannot be redefined.~%"
+		   ((fact rule)
+		    (let ((wamcode (compile-and-optimize clause head body)))
+		      (let ((key (cons (car head) (arity head))))
+			(if (eq (gethash key *predicate-type-table*) 'builtin)
+			    (format *query-io*
+				    "Builtin predicate ~A/~A cannot be redefined.~%"
 				    (car key) (cdr key))
 			    (progn
 			      (if (have-key? key *clause-code-table*)
-				  (rplacd (last (gethash key 
-						*clause-code-table*))
-					  (list (cons (cadr head)
-						      wamcode)))
+				  (rplacd (last (gethash key *clause-code-table*))
+					  (list (cons (cadr head) wamcode)))
 				  (progn
-				    (setf (gethash key 
-						*predicate-type-table*)
+				    (setf (gethash key *predicate-type-table*)
 					  'user-defined)
-				    (setf (gethash key 
-					      *clause-code-table*)
-					  (list (cons (cadr head)
-						      wamcode)))))
+				    (setf (gethash key *clause-code-table*)
+					  (list (cons (cadr head) wamcode)))))
 			      (update-dispatching-code key))))))
 		   (query
 		    (let ((wamcode (call-n-copy-to-next-instraction
-				    (compile-and-optimize clause 
-						head body t))))
+				    (compile-and-optimize clause head body t))))
 		      (send-query wamcode)))
 		   (call
 		    (let ((wamcode (call-n-copy-to-next-instraction
-				    (compile-and-optimize clause
-						head body))))
+				    (compile-and-optimize clause head body))))
 		      (send-query wamcode))))))))))))
 
 
@@ -2075,8 +2048,7 @@ heap: -2,-4,-6,...
 				  (setq *fail* t)
 				  (loop for i from 1 to n1 do
 				       (push (addr+ v1 i) pdl)
-				       (push (addr+ v2 i)
-					     pdl)))))))))))))))
+				       (push (addr+ v2 i) pdl)))))))))))))))
 
 
 (defun deref-wamvalue (v)
@@ -2097,15 +2069,13 @@ heap: -2,-4,-6,...
 	(to-lisp-object (store (addr+ (cdr obj) 1)))))
       (struct
        (let* ((struct-info (store (cdr obj)))
-	      (functor (car struct-info))
-	      (arity (cdr struct-info)))
+	      (functor (car struct-info)) (arity (cdr struct-info)))
 	 (cons *structure*
 	       (cons functor
 		     (maprange
 		      (lambda (i)
 			(to-lisp-object
-			 (store (addr+ (cdr obj) i)))) 1 
-		      (1+ arity)))))))))
+			 (store (addr+ (cdr obj) i)))) 1 (1+ arity)))))))))
 
 (defun make-solution-result (assign-table)
   (let (alist)
@@ -2127,8 +2097,7 @@ heap: -2,-4,-6,...
 	(*heap-area* (make-array 30 :adjustable t))
 	(*stack-area* (make-array 50 :adjustable t))
 	(*trail-area* (make-array 20 :adjustable t))
-	*P* *CP* *S* *HB* *H* *B0* *B* *E* *TR* *fail* 
-	(*num-of-args* nil) *mode*)
+	*P* *CP* *S* *HB* *H* *B0* *B* *E* *TR* *fail* (*num-of-args* nil) *mode*)
     (setq *P* query-code)
     (setq *CP* nil)
     (setq *H* bottom-of-heap)
@@ -2157,89 +2126,66 @@ heap: -2,-4,-6,...
 		    (restart-case
 			(signal (make-condition
 				 'prolog-found-solution
-				 :vars (make-solution-result 
-					 (second inst))
-				 :can-backtrack? 
-				    (/= *B* bottom-of-stack)))
+				 :vars (make-solution-result (second inst))
+				 :can-backtrack? (/= *B* bottom-of-stack)))
 		      (next-solution ()
 			(backtrack))))
-		   (put-variable-temporary 
-		     (let ((x (cadr inst)) 
-			   (a (caddr inst)))
-					     
-		       (setf (heap *H*) 
-			     (cons 'ref *H*))
-		       (setf (register x) (heap *H*))
-		       (setf (register a) (heap *H*))
-		       (setf *H* (addr+ *H* 1))
-			(setq *P* (cdr *P*))))
-		   (put-variable-permanent 
-		     (let* ((y (cadr inst)) 
-			    (a (caddr inst))
-			(addr (addr+ *E* y 1)))
-			(setf (stack addr) 
-			      (cons 'ref addr))
-			(setf (register a) (stack addr))
-			(setq *P* (cdr *P*))))
-		   (put-value-temporary 
-		     (let ((x (cadr inst)) (a (caddr inst)))
-			(setf (register a) (register x))
-			(setq *P* (cdr *P*))))
-		   (put-value-permanent 
-		     (let ((y (cadr inst)) 
-			   (a (caddr inst)))
-			(setf (register a) (stackvar y))
-			(setq *P* (cdr *P*))))
-		   (put-unsafe-value 
-		     (let* ((y (cadr inst)) 
-			    (a (caddr inst))
-			    (addr (dereference (addr+ *E* y 1))))
-			(if (addr< addr *E*)
-			  (setf (register a) (store addr))
-				(progn
-				  (setf (heap *H*) (cons 'ref *H*))
-				  (bind addr *H*)
-				  (setf (register a) (heap *H*))
-				  (setf *H* (addr+ *H* 1))))
-				  (setq *P* (cdr *P*))))
-		   (put-structure 
-		     (let ((f (cadr inst)) (a (caddr inst)))
-			(setf (heap *H*) f)
-			(setf (register a) (cons 'struct *H*))
-			(setf *H* (addr+ *H* 1))
+		   (put-variable-temporary (let ((x (cadr inst)) (a (caddr inst)))
+					     (setf (heap *H*) (cons 'ref *H*))
+					     (setf (register x) (heap *H*))
+					     (setf (register a) (heap *H*))
+					     (setf *H* (addr+ *H* 1))
+					     (setq *P* (cdr *P*))))
+		   (put-variable-permanent (let* ((y (cadr inst)) (a (caddr inst))
+						  (addr (addr+ *E* y 1)))
+					     (setf (stack addr) (cons 'ref addr))
+					     (setf (register a) (stack addr))
+					     (setq *P* (cdr *P*))))
+		   (put-value-temporary (let ((x (cadr inst)) (a (caddr inst)))
+					  (setf (register a) (register x))
+					  (setq *P* (cdr *P*))))
+		   (put-value-permanent (let ((y (cadr inst)) (a (caddr inst)))
+					  (setf (register a) (stackvar y))
+					  (setq *P* (cdr *P*))))
+		   (put-unsafe-value (let* ((y (cadr inst)) (a (caddr inst))
+					    (addr (dereference (addr+ *E* y 1))))
+				       (if (addr< addr *E*)
+					   (setf (register a) (store addr))
+					   (progn
+					     (setf (heap *H*) (cons 'ref *H*))
+					     (bind addr *H*)
+					     (setf (register a) (heap *H*))
+					     (setf *H* (addr+ *H* 1))))
+				       (setq *P* (cdr *P*))))
+		   (put-structure (let ((f (cadr inst)) (a (caddr inst)))
+				    (setf (heap *H*) f)
+				    (setf (register a) (cons 'struct *H*))
+				    (setf *H* (addr+ *H* 1))
 				    (setq *P* (cdr *P*))))
 		   (put-list (let ((a (cadr inst)))
 			       (setf (register a) (cons 'lis *H*))
 			       (setq *P* (cdr *P*))))
-		   (put-constant (let ((c (cadr inst)) 
-				       (a (caddr inst)))
-				   (setf (register a) 
-					 (cons 'con c))
+		   (put-constant (let ((c (cadr inst)) (a (caddr inst)))
+				   (setf (register a) (cons 'con c))
 				   (setq *P* (cdr *P*))))
-		   (set-variable-temporary 
-		     (let ((x (cadr inst)))
-			(setf (heap *H*) 
-			      (cons 'ref *H*))
-			(setf (register x) (heap *H*))
-			(setf *H* (addr+ *H* 1))
-			(setq *P* (cdr *P*))))
-		   (set-variable-permanent 
-		     (let ((y (cadr inst)))
-			(setf (heap *H*) (cons 'ref *H*))
-			(setf (stack (addr+ *E* y 1)) (heap *H*))
-			(setf *H* (addr+ *H* 1))
-			(setq *P* (cdr *P*))))
-		   (set-value-temporary 
-		     (let ((x (cadr inst)))
-			(setf (heap *H*) (register x))
-			(setf *H* (addr+ *H* 1))
-			(setq *P* (cdr *P*))))
-		   (set-value-permanent 
-		     (let ((y (cadr inst)))
-			(setf (heap *H*) 
-			      (stack (addr+ *E* y 1)))
-			(setf *H* (addr+ *H* 1))
-			(setq *P* (cdr *P*))))
+		   (set-variable-temporary (let ((x (cadr inst)))
+					     (setf (heap *H*) (cons 'ref *H*))
+					     (setf (register x) (heap *H*))
+					     (setf *H* (addr+ *H* 1))
+					     (setq *P* (cdr *P*))))
+		   (set-variable-permanent (let ((y (cadr inst)))
+					     (setf (heap *H*) (cons 'ref *H*))
+					     (setf (stack (addr+ *E* y 1)) (heap *H*))
+					     (setf *H* (addr+ *H* 1))
+					     (setq *P* (cdr *P*))))
+		   (set-value-temporary (let ((x (cadr inst)))
+					  (setf (heap *H*) (register x))
+					  (setf *H* (addr+ *H* 1))
+					  (setq *P* (cdr *P*))))
+		   (set-value-permanent (let ((y (cadr inst)))
+					  (setf (heap *H*) (stack (addr+ *E* y 1)))
+					  (setf *H* (addr+ *H* 1))
+					  (setq *P* (cdr *P*))))
 		   (set-local-value-temporary
 		    (if (eq (store (cadr inst)) 'ref)
 			(let* ((x (cadr inst))
@@ -2270,11 +2216,9 @@ heap: -2,-4,-6,...
 				   (setf (heap *H*) (cons 'con c))
 				   (setf *H* (addr+ *H* 1))
 				   (setq *P* (cdr *P*))))
-		   (set-void 
-		     (let ((n (cadr inst)))
-			(dotimes (i n)
-			(setf (heap (addr+ *H* i)) 
-			      (cons 'ref (addr+ *H* i))))
+		   (set-void (let ((n (cadr inst)))
+			       (dotimes (i n)
+				 (setf (heap (addr+ *H* i)) (cons 'ref (addr+ *H* i))))
 			       (setf *H* (addr+ *H* n))
 			       (setq *P* (cdr *P*))))
 		   (get-variable-temporary
@@ -2297,42 +2241,35 @@ heap: -2,-4,-6,...
 		    (let* ((f (cadr inst)) (a (caddr inst))
 			   (addr (dereference a)))
 		      (case (car (store addr))
-			(ref (setf (heap *H*) 
-				   (cons 'struct (addr+ *H* 1)))
+			(ref (setf (heap *H*) (cons 'struct (addr+ *H* 1)))
 			     (setf (heap (addr+ *H* 1)) f)
 			     (bind addr *H*)
 			     (setf *H* (addr+ *H* 2))
 			     (setq *mode* 'write))
-			(struct 
-			  (let ((struct-addr (cdr (store addr))))
-			    (if (equal (heap struct-addr) f)
-				(progn
-				  (setf *S* (addr+ struct-addr 1))
-				  (setq *mode* 'read))
-				  (setq *fail* t))))
+			(struct (let ((struct-addr (cdr (store addr))))
+				  (if (equal (heap struct-addr) f)
+				      (progn
+					(setf *S* (addr+ struct-addr 1))
+					(setq *mode* 'read))
+				      (setq *fail* t))))
 			(t (setq *fail* t)))
 		      (backtrack-or-continue)))
-		   (get-list 
-		     (let* ((a (cadr inst))
-			   (addr (dereference a)))
+		   (get-list (let* ((a (cadr inst))
+				    (addr (dereference a)))
 			       (case (car (store addr))
-				 (ref (setf (heap *H*) 
-					    (cons 'lis (addr+ *H* 1)))
+				 (ref (setf (heap *H*) (cons 'lis (addr+ *H* 1)))
 				      (bind addr *H*)
 				      (setf *H* (addr+ *H* 1))
 				      (setq *mode* 'write))
-				 (lis (let ((list-addr 
-					      (cdr (store addr))))
+				 (lis (let ((list-addr (cdr (store addr))))
 					(setf *S* list-addr)
 					(setq *mode* 'read)))
 				 (t (setq *fail* t)))
 			       (backtrack-or-continue)))
-		   (get-constant (let* ((c (cadr inst)) 
-					(a (caddr inst))
+		   (get-constant (let* ((c (cadr inst)) (a (caddr inst))
 					(addr (dereference a)))
 				   (case (car (store addr))
-				     (ref (setf (store addr) 
-						(cons 'con c))
+				     (ref (setf (store addr) (cons 'con c))
 					  (set-to-trail addr))
 				     (con (let ((c2 (cdr (store addr))))
 					    (if (not (equal c c2))
@@ -2385,8 +2322,7 @@ heap: -2,-4,-6,...
 				     (if (addr< addr *H*)
 					 (setf (heap *H*) (heap addr))
 					 (progn
-					   (setf (heap *H*)
-						 (cons 'ref *H*))
+					   (setf (heap *H*) (cons 'ref *H*))
 					   (bind addr *H*)))
 				     (setf *H* (addr+ *H* 1)))
 				   (progn
@@ -2398,13 +2334,11 @@ heap: -2,-4,-6,...
 		      (case *mode*
 			(read (unify (addr+ *E* y 1) *S*)
 			      (setf *S* (addr+ *S* 1)))
-			(write (let ((addr (dereference 
-					     (addr+ *E* y 1))))
+			(write (let ((addr (dereference (addr+ *E* y 1))))
 				 (if (addr< addr *H*)
 				     (setf (heap *H*) (heap addr))
 				     (progn
-				       (setf (heap *H*) 
-					     (cons 'ref *H*))
+				       (setf (heap *H*) (cons 'ref *H*))
 				       (bind addr *H*)))
 				 (setf *H* (addr+ *H* 1)))))
 		      (backtrack-or-continue)))
@@ -2413,12 +2347,9 @@ heap: -2,-4,-6,...
 		      (case *mode*
 			(read (let ((addr (dereference *S*)))
 				(case (car (store addr))
-				  (ref (setf (store addr)
-					     (cons 'con c))
+				  (ref (setf (store addr) (cons 'con c))
 				       (set-to-trail addr))
-				  (con (if (not (equal 
-						  (cdr (store addr))
-						  c))
+				  (con (if (not (equal (cdr (store addr)) c))
 					   (setq *fail* t)))
 				  (t (setq *fail* t)))
 				(setf *S* (addr+ *S* 1))))
@@ -2430,8 +2361,7 @@ heap: -2,-4,-6,...
 		      (case *mode*
 			(read (setf *S* (addr+ *S* n)))
 			(write (dotimes (i n)
-				 (setf (heap (addr+ *H* i))
-				       (cons 'ref (addr+ *H* i))))
+				 (setf (heap (addr+ *H* i)) (cons 'ref (addr+ *H* i))))
 			       (setf *H* (addr+ *H* n))))
 		      (setq *P* (cdr *P*))))
 		   (allocate
@@ -2459,8 +2389,7 @@ heap: -2,-4,-6,...
 			      (setf *CP* (cdr *P*))
 			      (setf *num-of-args* (cdr pair))
 			      (setf *B0* *B*)
-			      (setf *P* (gethash pair 
-					  *dispatching-code-table*)))
+			      (setf *P* (gethash pair *dispatching-code-table*)))
 			     (builtin
 			      ;;(princ "builtin-predicate call")
 			      ;;(princ pair)
@@ -2468,43 +2397,35 @@ heap: -2,-4,-6,...
 			      (setf *CP* (cdr *P*))
 			      (setf *num-of-args* (cdr pair))
 			      (setf *B0* *B*)
-			      (apply (gethash pair 
-					*builtin-predicate-table*)
-				     (maprange #'register 1 
-					       (1+ *num-of-args*))))
+			      (apply (gethash pair *builtin-predicate-table*)
+				     (maprange #'register 1 (1+ *num-of-args*))))
 			     (t (backtrack)))))
 		   (execute (let ((pair (cadr inst)))
 			      (case (defined pair)
 				(user-defined
 				 (setf *num-of-args* (cdr pair))
 				 (setf *B0* *B*)
-				 (setf *P* 
-				    (gethash pair 
-				      *dispatching-code-table*)))
+				 (setf *P* (gethash pair *dispatching-code-table*)))
 				(builtin
 				 (setf *num-of-args* (cdr pair))
 				 (setf *B0* *B*)
-				 (apply 
-				   (gethash pair 
-				      *builtin-predicate-table*)
-				      (maprange #'register 1 
-					(1+ *num-of-args*))))
+				 (apply (gethash pair *builtin-predicate-table*)
+					(maprange #'register 1 (1+ *num-of-args*))))
 				(t (backtrack)))))
 		   (proceed
 		    (setf *P* *CP*))
 		   (try-me-else
 		    (let* ((l (third inst))
-			;; (second inst) : the symbol of the label (for print)
-			;; (third inst)  : the pointer to the next instruction
-			(new-B
-			  (if (addr< *B* *E*)
-			      (addr+ *E* (car (last (car *CP*))) 2)
-			      (addr+ *B* (stack *B*) 8)))
-			(n *num-of-args*))
+			   ;; (second inst) : the symbol of the label (for print)
+			   ;; (third inst)  : the pointer to the next instruction
+			   (new-B
+			    (if (addr< *B* *E*)
+				(addr+ *E* (car (last (car *CP*))) 2)
+				(addr+ *B* (stack *B*) 8)))
+			   (n *num-of-args*))
 		      (setf (stack new-B) *num-of-args*)
 		      (dotimes (i n)
-			(setf (stack (addr+ new-B (1+ i))) 
-			      (register (1+ i))))
+			(setf (stack (addr+ new-B (1+ i))) (register (1+ i))))
 		      (setf (stack (addr+ new-B n 1)) *E*)
 		      (setf (stack (addr+ new-B n 2)) *CP*)
 		      (setf (stack (addr+ new-B n 3)) *B*)
@@ -2520,8 +2441,7 @@ heap: -2,-4,-6,...
 			  (n (stack *B*)))
 		      (setf *num-of-args* n)
 		      (dotimes (i n)
-			(setf (register (1+ i)) 
-			      (stack (addr+ *B* (1+ i)))))
+			(setf (register (1+ i)) (stack (addr+ *B* (1+ i)))))
 		      (setf *E* (stack (addr+ *B* n 1)))
 		      (setf *CP* (stack (addr+ *B* n 2)))
 		      (setf (stack (addr+ *B* n 4)) l)
@@ -2533,31 +2453,25 @@ heap: -2,-4,-6,...
 		   (trust-me (let ((n (stack *B*)))
 			       (setf *num-of-args* n)
 			       (dotimes (i n)
-				 (setf (register (1+ i))
-				       (stack (addr+ *B* (1+ i)))))
+				 (setf (register (1+ i)) (stack (addr+ *B* (1+ i)))))
 			       (setf *E* (stack (addr+ *B* n 1)))
 			       (setf *CP* (stack (addr+ *B* n 2)))
-			       (unwind-trail (stack (addr+ *B* n 5)) 
-					     *TR*)
+			       (unwind-trail (stack (addr+ *B* n 5)) *TR*)
 			       (setf *TR* (stack (addr+ *B* n 5)))
 			       (setf *H* (stack (addr+ *B* n 6)))
 			       (setf *B* (stack (addr+ *B* n 3)))
-			       (setf *HB* (stack (addr+ *B* 
-							(stack *B*) 
-							6)))
+			       (setf *HB* (stack (addr+ *B* (stack *B*) 6)))
 			       (setq *P* (cdr *P*))))
 		   (try
 		    (let* ((l (third inst))
 			   (new-B
 			    (if (addr< *B* *E*)
-			        (addr+ *E* 
-				       (car (last (car *CP*))) 2)
+			        (addr+ *E* (car (last (car *CP*))) 2)
 				(addr+ *B* (stack *B*) 8)))
 			   (n *num-of-args*))
 		      (setf (stack new-B) *num-of-args*)
 		      (dotimes (i n)
-			(setf (stack (addr+ new-B (1+ i))) 
-			      (register (1+ i))))
+			(setf (stack (addr+ new-B (1+ i))) (register (1+ i))))
 		      (setf (stack (addr+ new-B n 1)) *E*)
 		      (setf (stack (addr+ new-B n 2)) *CP*)
 		      (setf (stack (addr+ new-B n 3)) *B*)
@@ -2572,8 +2486,7 @@ heap: -2,-4,-6,...
 				(n (stack *B*)))
 			    (setf *num-of-args* n)
 			    (dotimes (i n)
-			      (setf (register (1+ i))
-				    (stack (addr+ *B* (1+ i)))))
+			      (setf (register (1+ i)) (stack (addr+ *B* (1+ i)))))
 			    (setf *E* (stack (addr+ *B* n 1)))
 			    (setf *CP* (stack (addr+ *B* n 2)))
 			    (setf (stack (addr+ *B* n 4)) (cdr *P*))
@@ -2586,25 +2499,18 @@ heap: -2,-4,-6,...
 				(n (stack *B*)))
 			    (setf *num-of-args* n)
 			    (dotimes (i n)
-			      (setf (register (1+ i))
-				    (stack (addr+ *B* (1+ i)))))
+			      (setf (register (1+ i)) (stack (addr+ *B* (1+ i)))))
 			    (setf *E* (stack (addr+ *B* n 1)))
 			    (setf *CP* (stack (addr+ *B* n 2)))
-			    (unwind-trail (stack (addr+ *B* n 5))
-					  *TR*)
+			    (unwind-trail (stack (addr+ *B* n 5)) *TR*)
 			    (setf *TR* (stack (addr+ *B* n 5)))
 			    (setf *H* (stack (addr+ *B* n 6)))
 			    (setf *B* (stack (addr+ *B* n 3)))
 			    (setf *HB* (stack (addr+ *B* (stack *B*) 6)))
 			    (setf *P* l)))
-		   (switch-on-term (let ((v (sixth inst)) 
-					 (c (seventh inst))
-					 (l (eighth inst)) 
-					 (s (ninth inst)))
-				     (let ((ptr 
-					     (case 
-					       (car 
-						(store (dereference 1)))
+		   (switch-on-term (let ((v (sixth inst)) (c (seventh inst))
+					 (l (eighth inst)) (s (ninth inst)))
+				     (let ((ptr (case (car (store (dereference 1)))
 						  (ref v)
 						  (con c)
 						  (lis l)
@@ -2635,14 +2541,12 @@ heap: -2,-4,-6,...
 			      (setq *P* (cdr *P*)))
 		   (cut (let* ( (y (cadr inst))
 			        (cut-instruction
-				  (when (and (numberp *E*) 
-					     (numberp *B*)) 
+				  (when (and (numberp *E*) (numberp *B*)) 
 				    (stack (addr+ *E* 2 y)) )))
 			(unless (numberp cut-instruction)
-			   (error (make-condition 
-				    'prolog-builtin-predicate-error
+			   (error (make-condition 'prolog-builtin-predicate-error
 			             :predicate (cons '|!| 0)
-				     :cause "Avoid ! after 'V is exp")))
+				     :cause "Avoid ! after 'V is expr' or 'V= F'")))
 			  (when (addr<  cut-instruction *B*)
 			    (setf *B* cut-instruction )
 			    (tidy-trail))
